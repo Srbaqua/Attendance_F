@@ -21,6 +21,41 @@ DerivedData
 *.ipa
 *.xcuserstate
 **/.xcode.env.local
+# Node.js dependencies
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Environment variables
+.env
+
+# Expo specific files
+.expo/
+.expo-shared/
+
+# Logs & temporary files
+*.log
+*.log.*
+*.swp
+*.swo
+*.DS_Store
+
+# Build files
+android/app/build/
+ios/Pods/
+ios/build/
+
+# OS-generated files
+Thumbs.db
+.DS_Store
+
+# Editor & IDE settings
+.vscode/
+.idea/
+*.iml
+
+# Git-related
+.gitignore
 
 # Android/IntelliJ
 #
