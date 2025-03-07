@@ -8,7 +8,10 @@ import cv2
 import os
 import numpy as np
 import sys
-from server import FaceRecognitionService
+
+
+
+from python_server import FaceRecognitionService
 
 def main():
     # Check arguments
