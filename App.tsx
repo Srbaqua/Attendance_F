@@ -1,103 +1,61 @@
-// App.tsx
-import React from 'react';
-import { NavigationContainer } from '@react-navigation/native';
-import { createStackNavigator } from '@react-navigation/stack';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Provider as PaperProvider } from 'react-native-paper';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
+import React, { useState } from 'react';
+import { View, Button, SafeAreaView, StyleSheet } from 'react-native';
 
-// Auth Screens
-
-import LoginScreen from './src/screens/auth/LoginScreen';
-import RegisterScreen from './src/screens/auth/RegisterScreen';
-
-// Student Screens
+// Screens
 import StudentDashboardScreen from './src/screens/student/DashboardScreen';
 import FaceRegistrationScreen from './src/screens/student/FaceRegistrationScreen';
-// import MarkAttendanceScreen from './src/screens/student/MarkAttendanceScreen';
-// import StudentHistoryScreen from './src/screens/student/HistoryScreen';
-// import StudentProfileScreen from './src/screens/student/ProfileScreen';
+import ManualAttendanceScreen from './src/screens/teacher/ManualAttendanceScreen';
 
-// Teacher Screens
-import TeacherDashboardScreen from './src/screens/teacher/DashboardScreen';
-// import ClassManagementScreen from './src/screens/teacher/ClassManagementScreen';
-// import ManualAttendanceScreen from './src/screens/teacher/ManualAttendanceScreen';
-// import TeacherHistoryScreen from './src/screens/teacher/HistoryScreen';
-import TeacherProfileScreen from './src/screens/teacher/ProfileScreen';
+const AppNavigator: React.FC = () => {
+  const [currentScreen, setCurrentScreen] = useState('Dashboard');
 
-// Auth Context
-import { AuthProvider, useAuth } from './contexts/AuthContext';
-
-const Stack = createStackNavigator();
-const Tab = createBottomTabNavigator();
-
-// Student Tab Navigator
-const StudentTabNavigator = () => (
-  <Tab.Navigator>
-    <Tab.Screen name="Dashboard" component={StudentDashboardScreen} />
-    {/* <Tab.Screen name="Mark Attendance" component={MarkAttendanceScreen} /> */}
-    {/* <Tab.Screen name="History" component={StudentHistoryScreen} /> */}
-    {/* <Tab.Screen name="Profile" component={StudentProfileScreen} /> */}
-  </Tab.Navigator>
-);
-
-// Teacher Tab Navigator
-const TeacherTabNavigator = () => (
-  <Tab.Navigator>
-    <Tab.Screen name="Dashboard" component={TeacherDashboardScreen} />
-    {/* <Tab.Screen name="Classes" component={ClassManagementScreen} /> */}
-    {/* <Tab.Screen name="Manual Attendance" component={ManualAttendanceScreen} /> */}
-    {/* <Tab.Screen name="History" component={TeacherHistoryScreen} /> */}
-    <Tab.Screen name="Profile" component={TeacherProfileScreen} />
-  </Tab.Navigator>
-);
-
-// Main Navigation
-const AppNavigator = () => {
-  const { isAuthenticated, userRole } = useAuth();
+  const renderScreen = () => {
+    switch (currentScreen) {
+      case 'Dashboard':
+        return <StudentDashboardScreen />;
+      case 'Face Registration':
+        return <FaceRegistrationScreen />;
+      case 'Manual Attendance':
+        return <ManualAttendanceScreen />;
+      default:
+        return <StudentDashboardScreen />;
+    }
+  };
 
   return (
-    <NavigationContainer>
-      <Stack.Navigator screenOptions={{ headerShown: false }}>
-        {!isAuthenticated ? (
-          // Auth Stack
-          <>
-            <Stack.Screen name="Login" component={LoginScreen} />
-            <Stack.Screen name="Register" component={RegisterScreen} />
-          </>
-        ) : (
-          // Role-based Navigation
-          <>
-            {userRole === 'student' ? (
-              <>
-                <Stack.Screen name="StudentTabs" component={StudentTabNavigator} />
-                <Stack.Screen
-                  name="FaceRegistration"
-                  component={FaceRegistrationScreen}
-                  options={{ headerShown: true }}
-                />
-              </>
-            ) : (
-              <Stack.Screen name="TeacherTabs" component={TeacherTabNavigator} />
-            )}
-          </>
-        )}
-      </Stack.Navigator>
-    </NavigationContainer>
+    <SafeAreaView style={styles.container}>
+      <View style={styles.screenContainer}>{renderScreen()}</View>
+      <View style={styles.navbar}>
+        <Button title="Dashboard" onPress={() => setCurrentScreen('Dashboard')} />
+        <Button title="Face Registration" onPress={() => setCurrentScreen('Face Registration')} />
+        <Button title="Manual Attendance" onPress={() => setCurrentScreen('Manual Attendance')} />
+      </View>
+    </SafeAreaView>
   );
 };
 
-// Root App Component
-const App = () => {
-  return (
-    <SafeAreaProvider>
-      <PaperProvider>
-        <AuthProvider>
-          <AppNavigator />
-        </AuthProvider>
-      </PaperProvider>
-    </SafeAreaProvider>
-  );
+const App: React.FC = () => {
+  return <AppNavigator />;
 };
+
+// Styles
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  screenContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  navbar: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    paddingVertical: 10,
+    backgroundColor: '#f8f9fa',
+    borderTopWidth: 1,
+    borderColor: '#ddd',
+  },
+});
 
 export default App;

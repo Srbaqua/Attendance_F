@@ -2,13 +2,13 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Alert } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const LoginScreen = ({ navigation }) => {
+const LoginScreen = ({ onNavigate }) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
 
   const handleLogin = async () => {
     try {
-      const response = await fetch('http://localhost:3000/api/users/login', {
+      const response = await fetch('http://192.168.X.X:3000/api/users/login', {  // Replace X.X with your local IP
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password }),
@@ -18,7 +18,7 @@ const LoginScreen = ({ navigation }) => {
       if (response.ok) {
         await AsyncStorage.setItem('token', data.token);
         Alert.alert('Success', 'Login successful!');
-        navigation.navigate('Home'); // Navigate to Home or Dashboard
+        onNavigate('Home'); // Move to Home Screen
       } else {
         Alert.alert('Error', data.message);
       }
@@ -35,7 +35,7 @@ const LoginScreen = ({ navigation }) => {
       <TouchableOpacity onPress={handleLogin} style={styles.button}>
         <Text style={{ color: '#fff', fontSize: 18 }}>Login</Text>
       </TouchableOpacity>
-      <TouchableOpacity onPress={() => navigation.navigate('Register')}>
+      <TouchableOpacity onPress={() => onNavigate('Register')}>
         <Text style={{ textAlign: 'center', marginTop: 10 }}>Don't have an account? Register</Text>
       </TouchableOpacity>
     </View>

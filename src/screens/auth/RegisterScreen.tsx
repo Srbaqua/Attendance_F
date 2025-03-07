@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, Alert } from 'react-native';
 
-const RegisterScreen = ({ navigation }) => {
+const RegisterScreen = ({ onNavigate }) => {
   const [name, setName] = useState('');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -9,7 +9,7 @@ const RegisterScreen = ({ navigation }) => {
 
   const handleRegister = async () => {
     try {
-      const response = await fetch('http://localhost:3000/api/users/register', {
+      const response = await fetch('http://192.168.X.X:3000/api/users/register', {  // Replace X.X with your local IP
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, username, password, role }),
@@ -18,7 +18,7 @@ const RegisterScreen = ({ navigation }) => {
       const data = await response.json();
       if (response.ok) {
         Alert.alert('Success', 'Registration successful!');
-        navigation.navigate('Login');
+        onNavigate('Login');
       } else {
         Alert.alert('Error', data.message);
       }
@@ -36,7 +36,7 @@ const RegisterScreen = ({ navigation }) => {
       <TouchableOpacity onPress={handleRegister} style={styles.button}>
         <Text style={{ color: '#fff', fontSize: 18 }}>Register</Text>
       </TouchableOpacity>
-      <TouchableOpacity onPress={() => navigation.navigate('Login')}>
+      <TouchableOpacity onPress={() => onNavigate('Login')}>
         <Text style={{ textAlign: 'center', marginTop: 10 }}>Already have an account? Login</Text>
       </TouchableOpacity>
     </View>
