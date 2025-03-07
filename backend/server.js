@@ -5,6 +5,10 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
+const { spawn } = require('child_process'); // Add this for Python integration
+const path = require('path');
+const fs = require('fs');
+
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -56,6 +60,61 @@ const authenticate = (req, res, next) => {
   } catch (error) {
     return res.status(401).json({ message: 'Invalid token' });
   }
+};
+
+// Helper function to call Python face recognition service
+const callPythonFaceService = (method, imageData, studentId) => {
+  return new Promise((resolve, reject) => {
+    // Create a temporary file to store the image data
+    const tempDir = path.join(__dirname, 'temp');
+    if (!fs.existsSync(tempDir)) {
+      fs.mkdirSync(tempDir);
+    }
+    
+    const imagePath = path.join(tempDir, `${Date.now()}.jpg`);
+    fs.writeFileSync(imagePath, Buffer.from(imageData, 'base64'));
+    
+    // Spawn Python process
+    const pythonProcess = spawn('python', [
+      path.join(__dirname, 'face_service_cli.py'), // Python script to call our FaceRecognitionService
+      method, // 'register' or 'recognize'
+      imagePath,
+      studentId || ''
+    ]);
+    
+    let resultData = '';
+    let errorData = '';
+    
+    // Collect data from Python script
+    pythonProcess.stdout.on('data', (data) => {
+      resultData += data.toString();
+    });
+    
+    pythonProcess.stderr.on('data', (data) => {
+      errorData += data.toString();
+    });
+    
+    // Handle process completion
+    pythonProcess.on('close', (code) => {
+      // Clean up temporary file
+      try {
+        fs.unlinkSync(imagePath);
+      } catch (err) {
+        console.error('Error removing temp file:', err);
+      }
+      
+      if (code === 0) {
+        try {
+          const result = JSON.parse(resultData);
+          resolve(result);
+        } catch (err) {
+          reject(new Error(`Failed to parse Python result: ${resultData}`));
+        }
+      } else {
+        reject(new Error(`Python process exited with code ${code}: ${errorData}`));
+      }
+    });
+  });
 };
 
 // Routes
@@ -143,12 +202,73 @@ app.post('/api/students/register-face', authenticate, async (req, res) => {
       return res.status(400).json({ message: 'Face data is required' });
     }
     
-    // Update user with face data
-    await User.findByIdAndUpdate(req.user.userId, { faceData: Buffer.from(faceData, 'base64') });
-    
-    res.json({ message: 'Face data registered successfully' });
+    // Call Python face recognition service
+    try {
+      const result = await callPythonFaceService('register', faceData, req.user.userId);
+      
+      if (result.success) {
+        // Update user with face data
+        await User.findByIdAndUpdate(req.user.userId, { faceData: Buffer.from(faceData, 'base64') });
+        res.json({ message: 'Face data registered successfully' });
+      } else {
+        res.status(400).json({ message: result.message || 'Face registration failed' });
+      }
+    } catch (pythonError) {
+      console.error('Python service error:', pythonError);
+      res.status(500).json({ message: 'Error processing face data', error: pythonError.message });
+    }
   } catch (error) {
     res.status(500).json({ message: 'Error registering face data', error: error.message });
+  }
+});
+
+// Verify attendance with face recognition
+app.post('/api/attendance/verify-face', authenticate, async (req, res) => {
+  try {
+    if (req.user.role !== 'student') {
+      return res.status(403).json({ message: 'Only students can verify with face recognition' });
+    }
+    
+    const { faceData, courseId, teacherId, location } = req.body;
+    
+    if (!faceData || !courseId || !teacherId) {
+      return res.status(400).json({ message: 'Missing required fields' });
+    }
+    
+    // Call Python face recognition service
+    try {
+      const result = await callPythonFaceService('recognize', faceData, req.user.userId);
+      
+      if (result.success && result.student_id === req.user.userId) {
+        // Create attendance record
+        const attendance = new Attendance({
+          studentId: req.user.userId,
+          teacherId,
+          courseId,
+          status: 'present',
+          verificationMethod: 'face+proximity',
+          location,
+        });
+        
+        await attendance.save();
+        
+        res.status(201).json({
+          message: 'Attendance verified and recorded successfully',
+          attendanceId: attendance._id,
+          confidence: result.confidence
+        });
+      } else {
+        res.status(401).json({ 
+          message: 'Face verification failed', 
+          details: result.message || 'Face did not match registered data'
+        });
+      }
+    } catch (pythonError) {
+      console.error('Python service error:', pythonError);
+      res.status(500).json({ message: 'Error processing face data', error: pythonError.message });
+    }
+  } catch (error) {
+    res.status(500).json({ message: 'Error verifying attendance', error: error.message });
   }
 });
 
@@ -216,8 +336,25 @@ app.get('/api/attendance/history', authenticate, async (req, res) => {
     res.status(500).json({ message: 'Error fetching attendance history', error: error.message });
   }
 });
+// In server.js, add this route:
+app.get('/api/test', (req, res) => {
+  res.json({ 
+    status: 'ok',
+    message: 'Connection successful',
+    timestamp: new Date().toISOString(),
+    serverAddress: req.connection.localAddress
+  });
+});
 
+app.get('/api/health', (req, res) => {
+  res.json({ 
+    status: 'ok', 
+    server: 'ClassCheck API',
+    time: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'development'
+  });
+});
 // Start server
-app.listen(PORT, () => {
+app.listen(PORT, "0.0.0.0", () => {
   console.log(`Server running on port ${PORT}`);
 });

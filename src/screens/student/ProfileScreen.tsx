@@ -10,7 +10,7 @@ const ProfileScreen = () => {
     const fetchProfile = async () => {
       try {
         const token = await AsyncStorage.getItem('token');
-        const response = await fetch('http://localhost:3000/api/users/profile', {
+        const response = await fetch('http://10.10.41.4:3000/api/users/profile', {
           headers: { Authorization: `Bearer ${token}` },
         });
 

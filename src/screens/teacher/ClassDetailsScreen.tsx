@@ -9,7 +9,7 @@ interface HistoryItem {
   status: string;
 }
 
-const HistoryScreen = () => {
+const ClassDetailsScreen = () => {
   const [history, setHistory] = useState<HistoryItem[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -17,7 +17,7 @@ const HistoryScreen = () => {
     const fetchHistory = async () => {
       try {
         const token = await AsyncStorage.getItem('token');
-        const response = await fetch('hhttp://10.10.41.4:3000/api/attendance/history', {
+        const response = await fetch('http://localhost:3000/api/attendance/history', {
           headers: { Authorization: `Bearer ${token}` },
         });
 
@@ -53,4 +53,4 @@ const styles = {
   item: { padding: 15, borderBottomWidth: 1, borderBottomColor: '#ddd' },
 };
 
-export default HistoryScreen;
+export default  ClassDetailsScreen;

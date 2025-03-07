@@ -5,6 +5,11 @@ import { View, Button, SafeAreaView, StyleSheet } from 'react-native';
 import StudentDashboardScreen from './src/screens/student/DashboardScreen';
 import FaceRegistrationScreen from './src/screens/student/FaceRegistrationScreen';
 import ManualAttendanceScreen from './src/screens/teacher/ManualAttendanceScreen';
+// In App.tsx
+import ConnectionTest from './src/components/ConnectionTest';
+
+// Add this somewhere in your component structure
+<ConnectionTest />
 
 const AppNavigator: React.FC = () => {
   const [currentScreen, setCurrentScreen] = useState('Dashboard');
@@ -57,5 +62,6 @@ const styles = StyleSheet.create({
     borderColor: '#ddd',
   },
 });
+
 
 export default App;

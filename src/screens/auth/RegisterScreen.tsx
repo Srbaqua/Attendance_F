@@ -9,7 +9,7 @@ const RegisterScreen = ({ onNavigate }) => {
 
   const handleRegister = async () => {
     try {
-      const response = await fetch('http://192.168.X.X:3000/api/users/register', {  // Replace X.X with your local IP
+      const response = await fetch('http://10.10.41.4:3000/api/users/register', {  // Replace X.X with your local IP
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ name, username, password, role }),
